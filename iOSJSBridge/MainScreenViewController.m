@@ -6,17 +6,18 @@
 //  Copyright © 2015 LUMO Bodytech. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "MainScreenViewController.h"
 
-@interface ViewController ()
+@interface MainScreenViewController ()
 
 @end
 
-@implementation ViewController
+@implementation MainScreenViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    NSInteger
 }
 
 - (void)didReceiveMemoryWarning {
