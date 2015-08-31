@@ -33,7 +33,7 @@ NSString* const sampleSize = @"1";
 }
 
 - (IBAction)start:(id)sender {
-    [self.js evaluateScript:@"calc(test_data)"];
+//    [self.js evaluateScript:@"calc(test_data)"];
     JSValue* avgBounce = [self.js evaluateScript:@"avg.bounce"];
     self.avgBounce.text = [avgBounce toString];
 }
