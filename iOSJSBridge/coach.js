@@ -40,59 +40,7 @@ var tip_metadata = {
              }
              ]
 };
-
 //MEMBER VARIABLES
-var thresholds;
-var tips = {
-    'cadence': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'bounce': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'lurch': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'pelvic_rot_x': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'pelvic_rot_y': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'pelvic_rot_z': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'stride': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    },
-    'ground_contact_t': {
-        'min_tips': [
-        ],
-        'max_tips': [
-        ]
-    }
-};
 var dataPoints = [
 ];
 var avg;
@@ -100,9 +48,7 @@ var sample_size = 10;
 var sample_avg;
 var sample_pts = [
 ];
-
 //FUNCTIONS
-
 /*
  Reads tip metadata and thresholds and creates lookup tables
  {
@@ -122,12 +68,59 @@ var sample_pts = [
  ]
  }
  */
-
-var metadata_mgr =  function(){
-    
-}();
-
-function init() {
+var metadata_mgr = function (tip_metadata) {
+    var my_metadata= JSON.parse(JSON.stringify(tip_metadata));
+    var thresholds;
+    var tips = {
+        'cadence': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'bounce': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'lurch': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'pelvic_rot_x': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'pelvic_rot_y': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'pelvic_rot_z': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'stride': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        },
+        'ground_contact_t': {
+            'min_tips': [
+            ],
+            'max_tips': [
+            ]
+        }
+    };
     thresholds = tip_metadata.thresholds;
     tip_metadata.tips.forEach(function (tip, idx, tip_array) {
                               tip.triggers.forEach(function (trigger, idx, trigger_array) {
@@ -166,11 +159,21 @@ function init() {
     };
     console.log('threshold=' + JSON.stringify(thresholds));
     console.log('tip=' + JSON.stringify(tips));
-}
+    return {
+    getTipsMatrix: function(){
+        return JSON.parse(JSON.stringify(tips));
+    },
+    getThresholds: function(){
+        return JSON.parse(JSON.stringify(thresholds));
+    }
+    };
+}(tip_metadata);
+
 
 /*
  Helper function to calculate averages
  */
+
 function calcAvg(pts) {
     return pts.reduce(function (avg, currVal, idx, array) {
                       var newAvg = {
@@ -214,6 +217,7 @@ function addDataPoint(dp) {
     }
 }
 //TEST CODE
+
 var test_data = [
                  {
                  't': 1,
@@ -326,9 +330,7 @@ var test_data = [
                  'ground_contact_t': 666.66
                  }
                  ];
-
 function test() {
-    init();
     test_data.forEach(function (element, idx, array) {
                       dataPoints.push(element);
                       });
@@ -336,3 +338,4 @@ function test() {
     console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x);
 }
 test();
+
