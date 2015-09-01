@@ -5,7 +5,7 @@ var tip_metadata = {
             'max': 500,
             'priority': 1
         },
-        'pelvic_rot': {
+        'pelvic_rot_x': {
             'max': 30,
             'priority': 1
         }
@@ -16,7 +16,7 @@ var tip_metadata = {
              'text': 'Keep your midsection engaged, like someone is going to punch you',
              'triggers': [
                           {
-                          'parameter': 'pelvic_rot',
+                          'parameter': 'pelvic_rot_x',
                           'threshold': 'max',
                           'priority': 1
                           }
@@ -27,7 +27,7 @@ var tip_metadata = {
              'text': 'Evenness - you\'re running one leg at a time',
              'triggers': [
                           {
-                          'parameter': 'pelvic_rot',
+                          'parameter': 'pelvic_rot_x',
                           'threshold': 'max',
                           'priority': 2
                           },
@@ -62,7 +62,19 @@ var tips = {
         'max_tips': [
         ]
     },
-    'pelvic_rot': {
+    'pelvic_rot_x': {
+        'min_tips': [
+        ],
+        'max_tips': [
+        ]
+    },
+    'pelvic_rot_y': {
+        'min_tips': [
+        ],
+        'max_tips': [
+        ]
+    },
+    'pelvic_rot_z': {
         'min_tips': [
         ],
         'max_tips': [
@@ -98,7 +110,7 @@ var sample_pts = [
  'text': 'Evenness - you\'re running one leg at a time',
  'triggers': [
  {
- 'parameter': 'pelvic_rot',
+ 'parameter': 'pelvic_rot_x',
  'threshold': 'max',
  'priority': 2
  },
@@ -110,6 +122,11 @@ var sample_pts = [
  ]
  }
  */
+
+var metadata_mgr =  function(){
+    
+}();
+
 function init() {
     thresholds = tip_metadata.thresholds;
     tip_metadata.tips.forEach(function (tip, idx, tip_array) {
@@ -161,14 +178,16 @@ function calcAvg(pts) {
                       newAvg.cadence = (avg.cadence * idx + currVal.cadence) / (idx + 1);
                       newAvg.bounce = (avg.bounce * idx + currVal.bounce) / (idx + 1);
                       newAvg.lurch = (avg.lurch * idx + currVal.lurch) / (idx + 1);
-                      newAvg.pelvic_rot = (avg.pelvic_rot * idx + currVal.pelvic_rot) / (idx + 1);
+                      newAvg.pelvic_rot_x = (avg.pelvic_rot_x * idx + currVal.pelvic_rot_x) / (idx + 1);
+                      newAvg.pelvic_rot_y = (avg.pelvic_rot_y * idx + currVal.pelvic_rot_y) / (idx + 1);
+                      newAvg.pelvic_rot_z = (avg.pelvic_rot_z * idx + currVal.pelvic_rot_z) / (idx + 1);
                       newAvg.stride = (avg.stride * idx + currVal.stride) / (idx + 1);
                       newAvg.ground_contact_t = (avg.ground_contact_t * idx
                                                  + currVal.ground_contact_t) / (idx + 1);
-                      console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot=' + avg.pelvic_rot +
+                      console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x +
                                   ' idx=' + idx);
-                      console.log('newAvg bouce=' + newAvg.bounce + ' newAvg pelvic_rot=' +
-                                  newAvg.pelvic_rot);
+                      console.log('newAvg bouce=' + newAvg.bounce + ' newAvg pelvic_rot_x=' +
+                                  newAvg.pelvic_rot_x);
                       return newAvg;
                       });
 }
@@ -177,7 +196,8 @@ function calcAvg(pts) {
  */
 
 function addDataPoint(dp) {
-    if (!dp.t || !dp.cadence || !dp.bounce || !dp.lurch || !dp.pelvic_rot
+    if (!dp.t || !dp.cadence || !dp.bounce || !dp.lurch
+        || !dp.pelvic_rot_x || !dp.pelvic_rot_y || !dp.pelvic_rot_z
         || !dp.stride || !dp.ground_contact_t) {
         console.log('bad dp=' + JSON.stringify(dp));
         throw {
@@ -200,7 +220,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 0,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -209,7 +231,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 10,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -218,7 +242,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 20,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -227,7 +253,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 30,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -236,7 +264,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 40,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -245,7 +275,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 50,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -254,7 +286,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 60,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -263,7 +297,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 70,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -272,7 +308,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 80,
+                 'pelvic_rot_x': 0,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  },
@@ -281,7 +319,9 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot': 90,
+                 'pelvic_rot_x': 10,
+                 'pelvic_rot_y': 0,
+                 'pelvic_rot_z': 0,
                  'stride': 555.55,
                  'ground_contact_t': 666.66
                  }
@@ -293,6 +333,6 @@ function test() {
                       dataPoints.push(element);
                       });
     var avg = calcAvg(dataPoints);
-    console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot=' + avg.pelvic_rot);
+    console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x);
 }
 test();
