@@ -1,18 +1,19 @@
+"use strict";
 var tip_metadata = {
     'sample_size': 5,
     'thresholds': [
                    {
                    'param': 'bounce',
                    'display_name': 'bounce',
-                   'min': 100,
-                   'max': 500,
+                   'min': 10000,
+                   'max': 50000,
                    'priority': 1
                    },
                    {
                    'param': 'pelvic_rot_x',
                    'display_name': 'pelvic rotation',
-                   'max': 30,
-                   'priority': 1
+                   'max': 10,
+                   'priority': 2
                    }
                    ],
     'tips': [
@@ -38,13 +39,19 @@ var tip_metadata = {
                           },
                           {
                           'parameter': 'bounce',
-                          'threshold': 'max',
+                          'threshold': 'min',
                           'priority': 1
                           }
                           ]
              }
              ]
 };
+/*
+ Utility functions
+ */
+function LOG(s){
+    console.log(s);
+}
 /*
  tip metadata mgr
  */
@@ -122,7 +129,7 @@ var metadata_mgr = function (tip_metadata) {
                                                    });
                               });
     //sort tips
-    for (tip_param in tips) {
+    for (var tip_param in tips) {
         if (tips.hasOwnProperty(tip_param) && typeof tip_param !== 'function') {
             var value = tips[tip_param];
             var sort_fn = function (a, b) {
@@ -156,19 +163,19 @@ var metadata_mgr = function (tip_metadata) {
         /*
          returns the tip matrix
          */
-        'tips_matrix': function () {
+        'getTipsMatrix': function () {
             return JSON.parse(JSON.stringify(tips));
         },
         /*
          returns the thresholds
          */
-        'thresholds': function () {
+        'getThresholds': function () {
             return JSON.parse(JSON.stringify(thresholds));
         },
         /*
          returns the sample size
          */
-        'sampleSize': sample_size
+        'sample_size': sample_size
     };
 }(tip_metadata); //end metadata_mgr
 /*
@@ -178,7 +185,7 @@ var run_data_mgr = function () {
     var dataPoints = [
     ];
     var avg;
-    var tips_matrix = metadata_mgr.tips_matrix;
+    var tips_matrix = metadata_mgr.getTipsMatrix();
     var sample_avg;
     var sample_pts = [
     ];
@@ -207,12 +214,14 @@ var run_data_mgr = function () {
          Calculates avg since th begining of the run
          */
         'calcAvg': function () {
+            console.log('calcAvg');
             return avgImpl(dataPoints);
         }, //end calcAvg
         /*
          Calculates sample avg
          */
         'calcSampleAvg': function () {
+            console.log('calcSampleAvg');
             return avgImpl(sample_pts);
         },
         /*
@@ -232,38 +241,27 @@ var run_data_mgr = function () {
             ];
             dataPoints.push(dp);
             sample_pts.push(dp);
-            if (sample_pts.size >= metadata_mgr.sample_size) {
-                sample_avg = calcSampleAvg;
-                /*
-                 'thresholds': [
-                 {
-                 'param': 'bounce',
-                 'min': 100,
-                 'max': 500,
-                 'priority': 1
-                 },
-                 {
-                 'param': 'pelvic_rot_x',
-                 'max': 30,
-                 'priority': 1
-                 }
-                 ]
-                 */
-                for (threshold in metadata_mgr.thresholds) {
+            if (sample_pts.length >= metadata_mgr.sample_size) {
+                sample_avg = this.calcSampleAvg();
+                var thresholds = metadata_mgr.getThresholds();
+                for(var i=0; i < thresholds.length; i++){
+                    var threshold = thresholds[i];
                     var param = threshold.param;
                     var min = (threshold.min == undefined) ? Number.NEGATIVE_INFINITY : threshold.min;
                     var max = (threshold.max == undefined) ? Number.POSITIVE_INFINITY : threshold.max;
+                    console.log('checking param=' + param + ' threshold.min=' + threshold.min +
+                                ' threshold.max=' + threshold.max + ' avg=' + sample_avg[param]);
                     if (sample_avg[param] < min) {
                         tips.push('Your ' + threshold.display_name + ' is too low');
-                        if(tips_matrix[param].min_tips.size >0){
-                            tips.push[tips_matrix[param].min_tips[0]];
+                        if(tips_matrix[param].min_tips.length >0){
+                            tips.push(tips_matrix[param].min_tips[0].text);
                         }
                         break;
                     } 
                     else if (sample_avg[param] > max) {
                         tips.push('Your ' + threshold.display_name + ' is too high');
-                        if(tips_matrix[param].max_tips.size >0){
-                            tips.push[tips_matrix[param].max_tips[0]];
+                        if(tips_matrix[param].max_tips.length >0){
+                            tips.push(tips_matrix[param].max_tips[0].text);
                         }
                         break;
                     }
@@ -271,8 +269,8 @@ var run_data_mgr = function () {
                         continue;
                     }
                 }
-                sample_pts = [
-                ];
+                
+                sample_pts = [];
             }
             return tips;
         }
@@ -285,7 +283,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -296,7 +294,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -307,7 +305,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -318,7 +316,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -329,7 +327,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -340,7 +338,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -351,7 +349,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -362,7 +360,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -373,7 +371,7 @@ var test_data = [
                  'cadence': 111.11,
                  'bounce': 222.22,
                  'lurch': 333.33,
-                 'pelvic_rot_x': 0,
+                 'pelvic_rot_x': 30,
                  'pelvic_rot_y': 0,
                  'pelvic_rot_z': 0,
                  'stride': 555.55,
@@ -393,10 +391,13 @@ var test_data = [
                  ];
 function test() {
     test_data.forEach(function (element, idx, array) {
-                      //     dataPoints.push(element);
-                      run_data_mgr.addDataPoint(element);
+                      var tips = run_data_mgr.addDataPoint(element);
+                      tips.forEach(function(item, idx, array){
+                                   console.log('tip=' + item);
+                                   });
                       });
-    var avg = run_data_mgr.calcAvg();
-    console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x);
+    //   var avg = run_data_mgr.calcAvg();
+    //   console.log('Run Average:avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x);
 }
+
 test();
