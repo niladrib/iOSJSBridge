@@ -1,15 +1,20 @@
 var tip_metadata = {
-    'thresholds': {
-        'bounce': {
-            'min': 100,
-            'max': 500,
-            'priority': 1
-        },
-        'pelvic_rot_x': {
-            'max': 30,
-            'priority': 1
-        }
-    },
+    'sample_size': 5,
+    'thresholds': [
+                   {
+                   'param': 'bounce',
+                   'display_name': 'bounce',
+                   'min': 100,
+                   'max': 500,
+                   'priority': 1
+                   },
+                   {
+                   'param': 'pelvic_rot_x',
+                   'display_name': 'pelvic rotation',
+                   'max': 30,
+                   'priority': 1
+                   }
+                   ],
     'tips': [
              {
              'id': 1,
@@ -40,37 +45,13 @@ var tip_metadata = {
              }
              ]
 };
-//MEMBER VARIABLES
-var dataPoints = [
-];
-var avg;
-var sample_size = 10;
-var sample_avg;
-var sample_pts = [
-];
-//FUNCTIONS
 /*
- Reads tip metadata and thresholds and creates lookup tables
- {
- 'id': 2,
- 'text': 'Evenness - you\'re running one leg at a time',
- 'triggers': [
- {
- 'parameter': 'pelvic_rot_x',
- 'threshold': 'max',
- 'priority': 2
- },
- {
- 'parameter': 'bounce',
- 'threshold': 'max',
- 'priority': 1
- }
- ]
- }
+ tip metadata mgr
  */
 var metadata_mgr = function (tip_metadata) {
-    var my_metadata= JSON.parse(JSON.stringify(tip_metadata));
+    var my_metadata = JSON.parse(JSON.stringify(tip_metadata));
     var thresholds;
+    var sample_size = my_metadata.sample_size;
     var tips = {
         'cadence': {
             'min_tips': [
@@ -121,7 +102,6 @@ var metadata_mgr = function (tip_metadata) {
             ]
         }
     };
-    thresholds = tip_metadata.thresholds;
     tip_metadata.tips.forEach(function (tip, idx, tip_array) {
                               tip.triggers.forEach(function (trigger, idx, trigger_array) {
                                                    var param = trigger.parameter;
@@ -157,67 +137,148 @@ var metadata_mgr = function (tip_metadata) {
             value.max_tips = value.max_tips.sort(sort_fn);
         }
     };
+    //sort thresholds
+    var thresholds = JSON.parse(JSON.stringify(tip_metadata.thresholds));
+    thresholds = thresholds.sort(function (a, b) {
+                                 if (a.priority < b.priority) {
+                                 return - 1
+                                 }
+                                 else if (a.priority > b.priority) {
+                                 return 1;
+                                 }
+                                 else {
+                                 return 0;
+                                 }
+                                 });
     console.log('threshold=' + JSON.stringify(thresholds));
     console.log('tip=' + JSON.stringify(tips));
     return {
-    getTipsMatrix: function(){
-        return JSON.parse(JSON.stringify(tips));
-    },
-    getThresholds: function(){
-        return JSON.parse(JSON.stringify(thresholds));
-    }
+        /*
+         returns the tip matrix
+         */
+        'tips_matrix': function () {
+            return JSON.parse(JSON.stringify(tips));
+        },
+        /*
+         returns the thresholds
+         */
+        'thresholds': function () {
+            return JSON.parse(JSON.stringify(thresholds));
+        },
+        /*
+         returns the sample size
+         */
+        'sampleSize': sample_size
     };
-}(tip_metadata);
-
-
+}(tip_metadata); //end metadata_mgr
 /*
- Helper function to calculate averages
+ Run data mgr
  */
-
-function calcAvg(pts) {
-    return pts.reduce(function (avg, currVal, idx, array) {
-                      var newAvg = {
-                      };
-                      newAvg.cadence = (avg.cadence * idx + currVal.cadence) / (idx + 1);
-                      newAvg.bounce = (avg.bounce * idx + currVal.bounce) / (idx + 1);
-                      newAvg.lurch = (avg.lurch * idx + currVal.lurch) / (idx + 1);
-                      newAvg.pelvic_rot_x = (avg.pelvic_rot_x * idx + currVal.pelvic_rot_x) / (idx + 1);
-                      newAvg.pelvic_rot_y = (avg.pelvic_rot_y * idx + currVal.pelvic_rot_y) / (idx + 1);
-                      newAvg.pelvic_rot_z = (avg.pelvic_rot_z * idx + currVal.pelvic_rot_z) / (idx + 1);
-                      newAvg.stride = (avg.stride * idx + currVal.stride) / (idx + 1);
-                      newAvg.ground_contact_t = (avg.ground_contact_t * idx
-                                                 + currVal.ground_contact_t) / (idx + 1);
-                      console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x +
-                                  ' idx=' + idx);
-                      console.log('newAvg bouce=' + newAvg.bounce + ' newAvg pelvic_rot_x=' +
-                                  newAvg.pelvic_rot_x);
-                      return newAvg;
-                      });
-}
-/*
- Adds a data point and returns tips if there are any.
- */
-
-function addDataPoint(dp) {
-    if (!dp.t || !dp.cadence || !dp.bounce || !dp.lurch
-        || !dp.pelvic_rot_x || !dp.pelvic_rot_y || !dp.pelvic_rot_z
-        || !dp.stride || !dp.ground_contact_t) {
-        console.log('bad dp=' + JSON.stringify(dp));
-        throw {
-            'name': 'BadInput',
-            'message': 'datapoint is missing a required field; pt=' + dp
-        };
+var run_data_mgr = function () {
+    var dataPoints = [
+    ];
+    var avg;
+    var tips_matrix = metadata_mgr.tips_matrix;
+    var sample_avg;
+    var sample_pts = [
+    ];
+    var avgImpl = function (dataPoints) {
+        return dataPoints.reduce(function (avg, currVal, idx, array) {
+                                 var newAvg = {
+                                 };
+                                 newAvg.cadence = (avg.cadence * idx + currVal.cadence) / (idx + 1);
+                                 newAvg.bounce = (avg.bounce * idx + currVal.bounce) / (idx + 1);
+                                 newAvg.lurch = (avg.lurch * idx + currVal.lurch) / (idx + 1);
+                                 newAvg.pelvic_rot_x = (avg.pelvic_rot_x * idx + currVal.pelvic_rot_x) / (idx + 1);
+                                 newAvg.pelvic_rot_y = (avg.pelvic_rot_y * idx + currVal.pelvic_rot_y) / (idx + 1);
+                                 newAvg.pelvic_rot_z = (avg.pelvic_rot_z * idx + currVal.pelvic_rot_z) / (idx + 1);
+                                 newAvg.stride = (avg.stride * idx + currVal.stride) / (idx + 1);
+                                 newAvg.ground_contact_t = (avg.ground_contact_t * idx
+                                                            + currVal.ground_contact_t) / (idx + 1);
+                                 console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x +
+                                             ' idx=' + idx);
+                                 console.log('newAvg bouce=' + newAvg.bounce + ' newAvg pelvic_rot_x=' +
+                                             newAvg.pelvic_rot_x);
+                                 return newAvg;
+                                 });
     }
-    dataPoints.push(dp);
-    sample_pts.push(dp);
-    if (sample_pts.size >= sample_size) {
-        sample_avg = calcAvg(sample_pts);
-        sample_pts = [
-        ];
-    }
-}
+    return {
+        /*
+         Calculates avg since th begining of the run
+         */
+        'calcAvg': function () {
+            return avgImpl(dataPoints);
+        }, //end calcAvg
+        /*
+         Calculates sample avg
+         */
+        'calcSampleAvg': function () {
+            return avgImpl(sample_pts);
+        },
+        /*
+         Adds a data point and returns tips if there are any.
+         */
+        'addDataPoint': function (dp) {
+            if (dp.t === undefined || dp.cadence === undefined || dp.bounce === undefined || dp.lurch === undefined
+                || dp.pelvic_rot_x === undefined || dp.pelvic_rot_y === undefined || dp.pelvic_rot_z === undefined
+                || dp.stride === undefined || dp.ground_contact_t === undefined) {
+                console.log('bad dp=' + JSON.stringify(dp));
+                throw {
+                    'name': 'BadInput',
+                    'message': 'datapoint is missing a required field; pt=' + dp
+                };
+            }
+            var tips = [
+            ];
+            dataPoints.push(dp);
+            sample_pts.push(dp);
+            if (sample_pts.size >= metadata_mgr.sample_size) {
+                sample_avg = calcSampleAvg;
+                /*
+                 'thresholds': [
+                 {
+                 'param': 'bounce',
+                 'min': 100,
+                 'max': 500,
+                 'priority': 1
+                 },
+                 {
+                 'param': 'pelvic_rot_x',
+                 'max': 30,
+                 'priority': 1
+                 }
+                 ]
+                 */
+                for (threshold in metadata_mgr.thresholds) {
+                    var param = threshold.param;
+                    var min = (threshold.min == undefined) ? Number.NEGATIVE_INFINITY : threshold.min;
+                    var max = (threshold.max == undefined) ? Number.POSITIVE_INFINITY : threshold.max;
+                    if (sample_avg[param] < min) {
+                        tips.push('Your ' + threshold.display_name + ' is too low');
+                        if(tips_matrix[param].min_tips.size >0){
+                            tips.push[tips_matrix[param].min_tips[0]];
+                        }
+                        break;
+                    } 
+                    else if (sample_avg[param] > max) {
+                        tips.push('Your ' + threshold.display_name + ' is too high');
+                        if(tips_matrix[param].max_tips.size >0){
+                            tips.push[tips_matrix[param].max_tips[0]];
+                        }
+                        break;
+                    }
+                    else{
+                        continue;
+                    }
+                }
+                sample_pts = [
+                ];
+            }
+            return tips;
+        }
+    };
+}();
 //TEST CODE
-
 var test_data = [
                  {
                  't': 1,
@@ -332,10 +393,10 @@ var test_data = [
                  ];
 function test() {
     test_data.forEach(function (element, idx, array) {
-                      dataPoints.push(element);
+                      //     dataPoints.push(element);
+                      run_data_mgr.addDataPoint(element);
                       });
-    var avg = calcAvg(dataPoints);
+    var avg = run_data_mgr.calcAvg();
     console.log('avg bouce=' + avg.bounce + ' avg pelvic_rot_x=' + avg.pelvic_rot_x);
 }
 test();
-
